@@ -2,6 +2,6 @@ discord.py[voice]
 #discord.py[voice]>=1.4.1
 #discord
 requests
-PIL
+pillow
 
 
