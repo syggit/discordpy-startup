@@ -24,11 +24,11 @@ def makeTablePic(fontfile, output):
 	green=(128,255,128,255)
 	#
 	row=[]
-	ch.append(50)
+	ch.append(90)
 	cw.append(120)
-	row.append(["",black,gray,0,0,0])   #label, forecolor, bgcolor, offsetx, offsety, font-kind
+	row.append(["",black,gray,0,0,0,False])   #label, forecolor, bgcolor, offsetx, offsety, font-kind, centering
 	cw.append(3)
-	row.append(["",black,gray,0,0,0])
+	row.append(["",black,gray,0,0,0,False])
 	v=None
 	for i in sch["date"]:
 		cw.append(75)
@@ -41,35 +41,43 @@ def makeTablePic(fontfile, output):
 				str="%s"%v[2]
 		else:
 			str=i
-		sx=(5-len(str))*8
-		if sx<0:
-			sx=0
-		row.append([str,black,gray,1+sx,7,0])
+		#slen=len(str)
+		#sx=(5-slen)
+		#if sx<0:
+		#	sx=0
+		tdatetime=""
+		str+='\n'
+		try:
+			tdatetime = datetime.datetime.strptime(i, '%Y/%m/%d')
+			str+="月火水木金土日"[tdatetime.weekday()]
+		except Exception:
+			pass
+		row.append([str,black,gray,0,7,0, True])
 	tbl.append(row)
 	#
 	row=[]
 	ch.append(3)
-	row.append(["",black,gray,0,0,0])
-	row.append(["",black,gray,0,0,0])
+	row.append(["",black,gray,0,0,0,False])
+	row.append(["",black,gray,0,0,0,False])
 	for i in sch["date"]:
-		row.append(["",black,gray,0,0,0])
+		row.append(["",black,gray,0,0,0,False])
 	tbl.append(row)
 	#
 	for j in sch["mem"]:
 		row=[]
 		ch.append(50)
-		row.append([j,black,gray,5,7,0])
-		row.append(["",black,gray,0,0,0])
+		row.append([j,black,gray,5,7,0,False])
+		row.append(["",black,gray,0,0,0,False])
 		for i in sch["date"]:
 			val=sch["ans"].get(j+"_"+i, 0)
 			if val==2:
-				row.append(["○",green,white,13,-10,1])
+				row.append(["○",green,white,0,-10,1,True])
 			elif val==1:
-				row.append(["△",yellow,white,13,-10,1])
+				row.append(["△",yellow,white,0,-10,1,True])
 			elif val==-1:
-				row.append(["×",gray,white,15,-30,2])
+				row.append(["×",gray,white,0,-30,2,True])
 			else:
-				row.append(["",black,white,12,2,1])
+				row.append(["",black,white,0,2,1,True])
 		tbl.append(row)
 	
 	tblx1=10
@@ -115,9 +123,18 @@ def makeTablePic(fontfile, output):
 	for j in range(0,len(ch)):
 		x=tblx1
 		for i in range(0,len(cw)):
-			draw.text((x+tbl[j][i][3],y+tbl[j][i][4]),tbl[j][i][0], \
-							font=(fnt if tbl[j][i][5]==0 else (fnt2 if tbl[j][i][5]==1 else fnt3)),fill=tbl[j][i][1])
-			#draw.rectangle((x,y,x+cw[i],y+ch[j]),fill=tbl[j][i][2])
+			ln=0
+			tfont=(fnt if tbl[j][i][5]==0 else (fnt2 if tbl[j][i][5]==1 else fnt3))
+			for m in tbl[j][i][0].split("\n"):
+				if tbl[j][i][6]:
+					tw, _ = draw.textsize(m, tfont)
+					cx=(cw[i]-tw)/2
+				else:
+					cx=0
+				draw.text((x+tbl[j][i][3]+cx,y+tbl[j][i][4]+ln*35),m, \
+								font=tfont,fill=tbl[j][i][1])
+				#draw.rectangle((x,y,x+cw[i],y+ch[j]),fill=tbl[j][i][2])
+				ln+=1
 			x+=cw[i]
 		y+=ch[j]
 		
