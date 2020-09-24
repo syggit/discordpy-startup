@@ -710,6 +710,18 @@ async def on_message(message):
 						for i in ret:
 							if i[0] not in sch["date"]:
 								sch["date"].append(i[0])
+						#removeproc
+						tmpdate=[]
+						for j in sch["date"]:
+							bRemoveFlag=False
+							for i in ret:
+								if j==i[0] and i[1]!=2:
+									bRemoveFlag=True
+									break
+							if bRemoveFlag==False:
+								tmpdate.append(j)
+						sch["date"]=tmpdate
+						#
 						if len(sch["date"])<=30:
 							msg="> あいよ！日付追加一丁！"
 						else:
