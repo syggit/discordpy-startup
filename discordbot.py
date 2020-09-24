@@ -658,7 +658,7 @@ async def on_message(message):
 					file_img = discord.File("/tmp/test.png")
 					await message.channel.send(file=file_img)
 				except Exception as e:
-					await message.channel.send("> [DEBUG] 例外発生しました。%s" % e.args)
+					await message.channel.send("> [DEBUG] 例外発生しました。%s" % str(e.args))
 
 				#await client.send_file(message.channel, "/tmp/test.png")
 			if v[1].lower() == 'sm':
