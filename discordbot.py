@@ -677,7 +677,7 @@ async def on_message(message):
 					await message.channel.send(msg)
 				else:
 					await message.channel.send("> [DEBUG] ネットワークエラー。設定値の保存に失敗")
-				await message.channel.send(msg)
+				#await message.channel.send(msg)
 			if v[1].lower() == 'st':
 				v2=m.split(" ",2)
 				if len(v2)<=2:
@@ -690,7 +690,7 @@ async def on_message(message):
 					await message.channel.send(msg)
 				else:
 					await message.channel.send("> [DEBUG] ネットワークエラー。設定値の保存に失敗")
-				await message.channel.send(msg)
+				#await message.channel.send(msg)
 			if v[1].lower() == 'sd':
 				if len(v)<=2:
 					await message.channel.send("> [DEBUG] 構文エラー")
@@ -717,7 +717,7 @@ async def on_message(message):
 					await message.channel.send(msg)
 				else:
 					await message.channel.send("> [DEBUG] ネットワークエラー。設定値の保存に失敗")
-				await message.channel.send(msg)
+				#await message.channel.send(msg)
 			if v[1].lower() == 'ss':
 				if len(v)<=2:
 					await message.channel.send("> [DEBUG] 構文エラー")
@@ -769,7 +769,7 @@ async def on_message(message):
 					await message.channel.send(msg)
 				else:
 					await message.channel.send("> [DEBUG] ネットワークエラー。設定値の保存に失敗")
-				await message.channel.send(msg)
+				#await message.channel.send(msg)
 	else:
 		if connected:
 			voice_client = message.guild.voice_client
