@@ -723,10 +723,10 @@ async def on_message(message):
 					await message.channel.send("> [DEBUG] 構文エラー")
 					return
 				elif len(v)==3 and v[2].lower()=="clear":
-					sch["ans"]=[]
+					sch["ans"]={}
 					msg="> あいよ！全スケジュール消去一丁！"
 				elif len(v)==3 and v[2].lower()=="clearall":
-					sch["ans"]=[]
+					sch["ans"]={}
 					sch["date"]=[]
 					msg="> あいよ！全スケジュールと日付消去一丁！"
 				elif len(v)==3 and (v[2].lower()=="ally" or v[2].lower()=="alln" or v[2].lower()=="all?" or v[2].lower()=="all*"):
