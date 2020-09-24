@@ -29,16 +29,22 @@ def makeTablePic(fontfile, output):
 	row.append(["",black,gray,0,0,0])   #label, forecolor, bgcolor, offsetx, offsety, font-kind
 	cw.append(3)
 	row.append(["",black,gray,0,0,0])
+	v=None
 	for i in sch["date"]:
 		cw.append(75)
+		prevv=v
 		v=i.split("/")
 		if len(v)==3:
-			str="%s/%s"%(v[1],v[2])
+			if prevv is None or (v[0]!=prevv[0] or v[1]!=prevv[1]):
+				str="%s/%s"%(v[1],v[2])
+			else:
+				str="%s"%v[2]
 		else:
 			str=i
-		if len(str)<5:
-			str=" "+str
-		row.append([str,black,gray,1,7,0])
+		sx=(5-len(str))*8
+		if sx<0:
+			sx=0
+		row.append([str,black,gray,1+sx,7,0])
 	tbl.append(row)
 	#
 	row=[]
