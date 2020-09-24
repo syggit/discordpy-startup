@@ -7,8 +7,222 @@ import ast
 import urllib.parse
 import subprocess, os
 import asyncio
+from PIL import Image, ImageDraw, ImageFont
+#import math
+import datetime
 
 
+def makeTablePic(fontfile, output):
+	tbl=[]
+	cw=[]
+	ch=[]
+	gray=(210,210,210)
+	white=(255,255,255)
+	black=(0,0,0,255)
+	yellow=(255,192,128,255)
+	blue=(128,192,255,255)
+	green=(128,255,128,255)
+	#
+	row=[]
+	ch.append(50)
+	cw.append(120)
+	row.append(["",black,gray,0,0,0])   #label, forecolor, bgcolor, offsetx, offsety, font-kind
+	cw.append(3)
+	row.append(["",black,gray,0,0,0])
+	for i in sch["date"]:
+		cw.append(75)
+		v=i.split("/")
+		if len(v)==3:
+			str="%s/%s"%(v[1],v[2])
+		else:
+			str=i
+		if len(str)<5:
+			str=" "+str
+		row.append([str,black,gray,1,7,0])
+	tbl.append(row)
+	#
+	row=[]
+	ch.append(3)
+	row.append(["",black,gray,0,0,0])
+	row.append(["",black,gray,0,0,0])
+	for i in sch["date"]:
+		row.append(["",black,gray,0,0,0])
+	tbl.append(row)
+	#
+	for j in sch["mem"]:
+		row=[]
+		ch.append(50)
+		row.append([j,black,gray,5,7,0])
+		row.append(["",black,gray,0,0,0])
+		for i in sch["date"]:
+			val=sch["ans"].get(j+"_"+i, 0)
+			if val==2:
+				row.append(["○",green,white,13,-10,1])
+			elif val==1:
+				row.append(["△",yellow,white,13,-10,1])
+			elif val==-1:
+				row.append(["×",gray,white,15,-30,2])
+			else:
+				row.append(["",black,white,12,2,1])
+		tbl.append(row)
+	
+	tblx1=10
+	tbly1=70
+	tblx2gap=10
+	tbly2gap=170
+	
+	tblx2=tblx1+sum(cw)
+	tbly2=tbly1+sum(ch)
+		
+	
+	im=Image.new('RGB', (tblx2+tblx2gap,tbly2+tbly2gap),(255,255,255))
+	draw=ImageDraw.Draw(im)
+	#fnt=ImageFont.truetype("/system/fonts/DroidSans.ttf",24)
+	fnt=ImageFont.truetype(fontfile,24) #"/system/fonts/NotoSansCJK-Regular.ttc",24)
+	fnt2=ImageFont.truetype(fontfile,50) #"/system/fonts/NotoSansCJK-Regular.ttc",24)
+	fnt3=ImageFont.truetype(fontfile,70) #"/system/fonts/NotoSansCJK-Regular.ttc",24)
+	fnt4=ImageFont.truetype(fontfile,32) #"/system/fonts/NotoSansCJK-Regular.ttc",24)
+	fnt5=ImageFont.truetype(fontfile,20) #"/system/fonts/NotoSansCJK-Regular.ttc",24)
+	
+	y=tbly1
+	for j in range(0,len(ch)):
+		x=tblx1
+		for i in range(0,len(cw)):
+			draw.rectangle((x,y,x+cw[i],y+ch[j]),fill=tbl[j][i][2])
+			x+=cw[i]
+		y+=ch[j]
+	
+	x=tblx1
+	for i in range(0,len(cw)):
+		draw.line(( x,tbly1,x,tbly2),fill=(0,0,0,255),width=1)
+		x+=cw[i]
+	y=tbly1
+	for j in range(0,len(ch)):
+		draw.line(( tblx1,y,tblx2,y),fill=(0,0,0,255),width=1)
+		y+=ch[j]
+	draw.rectangle((tblx1-0,tbly1-0,tblx2+0,tbly2+0),outline=(0,0,0,255))
+	draw.rectangle((tblx1-1,tbly1-1,tblx2+1,tbly2+1),outline=(0,0,0,255))
+	draw.rectangle((tblx1-2,tbly1-2,tblx2+2,tbly2+2),outline=(0,0,0,255))
+	draw.line((tblx1, tbly1,tblx1+cw[0],tbly1+ch[0]),fill=(0,0,0,255),width=1)
+	
+	y=tbly1
+	for j in range(0,len(ch)):
+		x=tblx1
+		for i in range(0,len(cw)):
+			draw.text((x+tbl[j][i][3],y+tbl[j][i][4]),tbl[j][i][0], \
+							font=(fnt if tbl[j][i][5]==0 else (fnt2 if tbl[j][i][5]==1 else fnt3)),fill=tbl[j][i][1])
+			#draw.rectangle((x,y,x+cw[i],y+ch[j]),fill=tbl[j][i][2])
+			x+=cw[i]
+		y+=ch[j]
+		
+	draw.text((5,5),sch.get("title",""),font=fnt4,fill=black)
+	
+	sa=[]
+	sb=[]
+	sa.append("＜コマンド例＞") ; sb.append("")
+	sa.append("・!oq ss 1/1") ; sb.append("…　1月1日を○にする")
+	sa.append("・!oq ss 1/1-1/3 1/5") ; sb.append("…　1月1日～3日と5日を○にする")
+	sa.append("・!oq ss 1/1-1/3n") ; sb.append("…　1月1日～3日を×にする")
+	sa.append("・!oq ss 1/1-1/3?") ; sb.append("…　1月1日～3日を△にする")
+	sa.append("・!oq ss 1/1-1/3*") ; sb.append("…　1月1日～3日を空白にする")
+	sa.append("・!oq ss ally") ; sb.append("…　全日程○にする（allnなら×、all?なら△）")
+	for i in range(0,len(sa)):
+		draw.text((5,tbly2+5+20*i),sa[i],font=fnt5,fill=black)
+		draw.text((220,tbly2+5+20*i),sb[i],font=fnt5,fill=black)
+	im.save(output)  #"./test.png"
+
+def normalizeDate(lst,maxdate=30):
+	ret=[]
+	today = datetime.date.today()
+	ty = today.year
+	tm=today.month
+	td=today.day
+	for i in lst:
+		flag=2
+		if i[-1].lower()=="y":
+			flag=2
+			i=i[:-1]
+		elif i[-1].lower()=="?":
+			flag=1
+			i=i[:-1]
+		elif i[-1].lower()=="*":
+			flag=0
+			i=i[:-1]
+		elif i[-1].lower()=="n":
+			flag=-1
+			i=i[:-1]
+		v=i.split("-")
+		if len(v)==1:
+			v.append(v[0])
+		a=v[0].split("/")
+		b=v[1].split("/")
+		for i in range(0,len(a)):
+			try:
+				a[i]=int(a[i])
+			except Exception:
+				raise Exception("非数値が含まれています。")
+		for i in range(0,len(b)):
+			try:
+				b[i]=int(b[i])
+			except Exception:
+				raise Exception("非数値が含まれています。")
+		if len(a)==1:
+			a.insert(0,tm)
+		if len(a)==2:
+			a.insert(0,ty)
+		if len(b)==1:
+			if a[2]>b[0]:
+				b.insert(0,a[1]+1)
+			else:
+				b.insert(0,a[1])
+			if b[0]>12:
+				b[0]=1
+				b.insert(0,a[0]+1)
+		if len(b)==2:
+			if a[1]*31+a[2]>b[0]*31+b[1]:
+				b.insert(0,a[0]+1)
+			else:
+				b.insert(0,a[0])
+		if (a[0]*12+a[1])*31+a[2]>(b[0]*12+b[1])*31+b[2]:
+				raise Exception("開始日と終了日が逆")
+		try:
+			ta = datetime.datetime(a[0],a[1],a[2])
+			tb = datetime.datetime(b[0],b[1],b[2])
+		except Exception:
+			raise Exception("日付が異常です")
+		cnt=0
+		#print("%d/%d/%d"%(tb.year,tb.month,tb.day))
+		while True:
+			if cnt>maxdate:
+				raise Exception("候補日数が多すぎです")
+			ret.append(["%d/%d/%d"%(ta.year,ta.month,ta.day),flag])
+			#print("%d/%d/%d"%(ta.year,ta.month,ta.day))
+			if ta.year==tb.year and ta.month==tb.month and ta.day==tb.day:
+				break
+			ta=ta + datetime.timedelta(days=1)
+			cnt+=1
+		#
+		#ret.append(["%d/%d/%d"%(a[0],a[1],a[2]),"%d/%d/%d"%(b[0],b[1],b[2])])
+	return ret
+def datesort(x):
+	v=x.split("/")
+	if len(v)!=3:
+		return (9999*12+12)*31+31
+	for i in range(0,len(v)):
+			try:
+				v[i]=int(v[i])
+			except Exception:
+				return (9999*12+12)*31+31
+	return (v[0]*12+v[1])*31+v[2]
+
+def findFont():
+	for i in os.listdir(path='.'):
+		sdir=os.path.join(".", i)
+		if os.path.isdir(sdir):
+			for j in os.listdir(path=sdir):
+				if j[-4:].lower()==".ttf":
+					return os.path.join(sdir,j)
+	return ""
 
 def loadSetting(kind):
 	global gasurl
@@ -17,6 +231,8 @@ def loadSetting(kind):
 		row=32
 	elif kind=="words":
 		row=33
+	elif kind=="sch":
+		row=34
 	try:
 		url=gasurl+"?col=21&row=%d" % row
 		response = requests.get(url)
@@ -34,6 +250,8 @@ def saveSetting(kind,text):
 		row=32
 	elif kind=="words":
 		row=33
+	elif kind=="sch":
+		row=34
 	try:
 		encryptText = urllib.parse.quote("ok,"+text)
 		url=gasurl+("?col=21&row=%d&txt=" % row)+encryptText
@@ -74,6 +292,22 @@ def saveSettingWords(lst):
 	if type(lst) is list:
 		return saveSetting("words",str(lst))
 	return False
+
+def loadSettingSchedule():
+	ret=loadSetting("sch")
+	if ret is None:
+		return None
+	try:
+		return ast.literal_eval(ret)
+	except Exception:
+		pass
+	return None
+
+def saveSettingSchedule(dic):
+	if type(dic) is dict:
+		return saveSetting("sch",str(dic))
+	return False
+
 
 def getVoiceConfig(name):
 	global cfg
@@ -139,6 +373,20 @@ if words is not None:
 else:
 	print("failed to load")
 	words=[]
+
+sch=loadSettingSchedule()
+if sch is not None:
+	print("successfully loaded(sch)")
+	print(sch)
+else:
+	print("failed to load")
+	sch={}
+if "mem" not in sch:
+	sch["mem"]=[]
+if "date" not in sch:
+	sch["date"]=[]
+if "ans" not in sch:
+	sch["ans"]={}
 
 
 if not discord.opus.is_loaded():
@@ -384,6 +632,144 @@ async def on_message(message):
 					await message.channel.send("> あいよ！読み上げ文字数設定一丁！")
 				else:
 					await message.channel.send("> [DEBUG] ネットワークエラー。設定値の保存に失敗")
+			if v[1].lower() == 'sc':
+				if len(v)!=2:
+					await message.channel.send("> [DEBUG] 構文エラー")
+					return
+				#find font
+				"""
+				fontfile=findFont()
+				
+				if fontfile=="":
+					send = requests.get("https://osdn.net/frs/redir.php?m=ymu&f=mplus-fonts%2F62344%2Fmplus-TESTFLIGHT-063a.tar.xz")
+					result = open("font.tar.xz", 'wb')
+					result.write(send.content)
+					result.close()
+					proc = subprocess.run("xz -dc font.tar.xz | tar xfv -", shell=True)
+					fontfile=findFont()
+				if fontfile=="":
+					await message.channel.send("> [DEBUG] フォント初期化エラー")
+					return
+				"""
+				fontfile="mplus-1p-regular.ttf"
+				print(fontfile)
+				try:
+					makeTablePic(fontfile,"/tmp/test.png")
+					file_img = discord.File("/tmp/test.png")
+					await message.channel.send(file=file_img)
+				except Exception as e:
+					await message.channel.send("> [DEBUG] 例外発生しました。%s" % e.args)
+
+				#await client.send_file(message.channel, "/tmp/test.png")
+			if v[1].lower() == 'sm':
+				if len(v)<=2:
+					await message.channel.send("> [DEBUG] 構文エラー")
+					return
+				elif len(v)==3 and v[2].lower()=="clear":
+					sch["mem"]=[]
+					msg="> あいよ！メンバー消去一丁！"
+				else:
+					for i in v[2:]:
+						sch["mem"].append(i)
+					msg="> あいよ！メンバー追加一丁！"
+				ret=saveSettingSchedule(sch)
+				if ret == True:
+					await message.channel.send(msg)
+				else:
+					await message.channel.send("> [DEBUG] ネットワークエラー。設定値の保存に失敗")
+				await message.channel.send(msg)
+			if v[1].lower() == 'st':
+				v2=m.split(" ",2)
+				if len(v2)<=2:
+					await message.channel.send("> [DEBUG] 構文エラー")
+					return
+				sch["title"]=v2[2]
+				msg="> あいよ！タイトル設定一丁！"
+				ret=saveSettingSchedule(sch)
+				if ret == True:
+					await message.channel.send(msg)
+				else:
+					await message.channel.send("> [DEBUG] ネットワークエラー。設定値の保存に失敗")
+				await message.channel.send(msg)
+			if v[1].lower() == 'sd':
+				if len(v)<=2:
+					await message.channel.send("> [DEBUG] 構文エラー")
+					return
+				elif len(v)==3 and v[2].lower()=="clear":
+					sch["date"]=[]
+					msg="> あいよ！日付消去一丁！"
+				else:
+					try:
+						ret=normalizeDate(v[2:])
+						for i in ret:
+							if i[0] not in sch["date"]:
+								sch["date"].append(i[0])
+						if len(sch["date"])<=30:
+							msg="> あいよ！日付追加一丁！"
+						else:
+							sch["date"]=sch["date"][:30]
+							msg="> あいよ！日付追加一丁！(候補日数30件超えたため切り捨てました)"
+						sch["date"] = sorted(sch["date"], key=datesort)
+					except Exception as e:
+						msg="> [DEBUG] 例外発生しました(sd)：%s" % e.args
+				ret=saveSettingSchedule(sch)
+				if ret == True:
+					await message.channel.send(msg)
+				else:
+					await message.channel.send("> [DEBUG] ネットワークエラー。設定値の保存に失敗")
+				await message.channel.send(msg)
+			if v[1].lower() == 'ss':
+				if len(v)<=2:
+					await message.channel.send("> [DEBUG] 構文エラー")
+					return
+				elif len(v)==3 and v[2].lower()=="clear":
+					sch["ans"]=[]
+					msg="> あいよ！全スケジュール消去一丁！"
+				elif len(v)==3 and v[2].lower()=="clearall":
+					sch["ans"]=[]
+					sch["date"]=[]
+					msg="> あいよ！全スケジュールと日付消去一丁！"
+				elif len(v)==3 and (v[2].lower()=="ally" or v[2].lower()=="alln" or v[2].lower()=="all?" or v[2].lower()=="all*"):
+					flag=None
+					if v[2].lower()=="ally":
+						flag=2
+					elif v[2].lower()=="alln":
+						flag=-1
+					elif v[2].lower()=="all?":
+						flag=1
+					elif v[2].lower()=="all*":
+						flag=0
+					if flag is None:
+						msg="> [DEBUG] 例外発生しました。%s" % e.args
+					else:
+						for i in sch["date"]:
+							sch["ans"][message.author.name+"_"+i]=flag
+						msg="> あいよ！日付全件の設定完了！"
+				else:
+					try:
+						sindex=2
+						target=message.author.name
+						if len(v)>=4 and v[2] in sch["mem"]:
+							target=v[2]
+							sindex=3
+						ret=normalizeDate(v[sindex:],400)
+						cnt=0
+						for i in ret:
+							if i[0] in sch["date"]:
+								sch["ans"][target+"_"+i[0]]=i[1]
+								cnt+=1
+						if cnt==0:
+							msg="> [DEBUG] 候補日以外の日付が指定された可能性があります。"
+						else:
+							msg="> あいよ！ %d 件の設定完了！" % cnt
+					except Exception as e:
+						msg="> [DEBUG] 例外発生しました(ss)：%s" % e.args
+				ret=saveSettingSchedule(sch)
+				if ret == True:
+					await message.channel.send(msg)
+				else:
+					await message.channel.send("> [DEBUG] ネットワークエラー。設定値の保存に失敗")
+				await message.channel.send(msg)
 	else:
 		if connected:
 			voice_client = message.guild.voice_client
